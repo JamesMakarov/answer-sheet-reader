@@ -1,16 +1,28 @@
-name: Python validation
+name: Django tests
 
 on:
   push:
   pull_request:
 
 jobs:
-  syntax:
+  test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Compile Python sources
-        run: python -m compileall -q leitor_projeto
+          cache: pip
+          cache-dependency-path: leitor_projeto/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r leitor_projeto/requirements.txt
+
+      - name: Run Django tests
+        env:
+          DJANGO_SECRET_KEY: ci-only-secret-key
+          DJANGO_DEBUG: "False"
+          DJANGO_ALLOWED_HOSTS: localhost
+        run: python leitor_projeto/manage.py test App
