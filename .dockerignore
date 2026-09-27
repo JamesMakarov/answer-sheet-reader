@@ -13,3 +13,5 @@ db.sqlite3
 *.sqlite3
 .idea/
 .vscode/
+leitor_projeto/staticfiles/
+leitor_projeto/media/
