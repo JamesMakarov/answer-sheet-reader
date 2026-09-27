@@ -40,3 +40,35 @@ class DataModelTests(TestCase):
         self.assertEqual(result.usuario, user)
         self.assertEqual(result.imagem, image)
         self.assertEqual(result.pontuacao, 20)
+
+
+class RegistrationTests(TestCase):
+    def test_rejects_weak_password(self):
+        response = self.client.post(
+            "/auth/register/",
+            {"email": "weak@example.com", "password": "123"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(get_user_model().objects.filter(email="weak@example.com").exists())
+
+    def test_creates_user_and_profile_with_valid_password(self):
+        response = self.client.post(
+            "/auth/register/",
+            {
+                "email": "new.user@example.com",
+                "password": "A-strong-test-password-2026!",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        user = get_user_model().objects.get(email="new.user@example.com")
+        self.assertTrue(hasattr(user, "perfil"))
+
+
+class HealthCheckTests(TestCase):
+    def test_health_endpoint_reports_available_database(self):
+        response = self.client.get("/health/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ok"})
