@@ -1,123 +1,105 @@
-# Leitor de Gabarito
+# Answer Sheet Reader
 
-O sistema permite que os usuários cadastrem suas contas, enviem imagens dos gabaritos preenchidos, revisem a leitura automática feita pelo sistema e recebam uma correção baseada em um gabarito oficial. Esse projeto proporcionou uma introdução prática ao desenvolvimento web e à integração entre diferentes tecnologias.
+Aplicação web para envio, leitura, revisão e correção de gabaritos. O projeto combina **Django**, **PostgreSQL**, **Docker** e uma biblioteca nativa em **C/C++** para processamento das imagens.
 
----
+## Funcionalidades
 
-## Funcionalidades principais
+- cadastro, login e logout de usuários;
+- edição de perfil;
+- upload de imagens de gabaritos;
+- leitura automática do ID da prova, ID do participante e alternativas marcadas;
+- revisão manual antes da confirmação;
+- correção a partir de um gabarito oficial;
+- cálculo da pontuação;
+- histórico dos gabaritos enviados.
 
-- **Autenticação de usuários**: sistema de cadastro, login e logout.
-- **Gerenciamento de perfil**: cada usuário pode atualizar informações pessoais e adicionar uma foto.
-- **Envio de gabaritos**: envio de arquivos de imagem (JPG, PNG, etc.) por meio de um formulário simples.
-- **Leitura automática das respostas**: o sistema identifica o ID da prova, o ID do participante e as alternativas marcadas.
-- **Revisão manual**: os dados lidos são apresentados em um formulário para que o usuário possa corrigir eventuais erros.
-- **Correção da prova**: após confirmação, o sistema compara as respostas com o gabarito oficial e calcula a pontuação.
-- **Histórico completo**: os usuários podem visualizar uma galeria com todas as imagens enviadas, suas pontuações e ações como edição ou exclusão dos registros.
-
----
-
-## Tecnologias utilizadas
+## Tecnologias
 
 ### Backend
 
-- Linguagem: Python 3.12  
-- Framework: Django 5.2  
-- Banco de Dados: PostgreSQL 15  
-- Ambiente: Docker + Docker Compose  
+- Python 3.12
+- Django 5.2
+- PostgreSQL 15
+- Docker e Docker Compose
 
 ### Frontend
 
-- Renderização via templates do Django (server-side rendering)  
-- Estilo: Bootstrap 5.3 + tema escuro customizado em CSS  
-- Ícones: Bootstrap Icons  
+- Django Templates
+- Bootstrap 5.3
+- CSS customizado
+- Bootstrap Icons
 
 ### Processamento de imagem
 
-- Biblioteca externa escrita em C/C++: `libleitor.so`  
-- Dependências: Raylib e ZXing (para gráficos e leitura de QR Codes/códigos de barras)  
-- Comunicação entre C e Python feita com `ctypes`  
-- Pré-processamento da imagem feito com Pillow, para validações antes da leitura  
+A leitura da imagem é realizada por uma biblioteca nativa, carregada pelo Python com `ctypes`.
 
----
+- `libleitor.so`
+- Raylib
+- ZXing
+- Pillow
 
-## Estrutura e fluxo do sistema
+A integração permite que o backend Django envie o caminho da imagem para a biblioteca nativa e receba os dados reconhecidos para revisão e armazenamento.
 
-### 1. Upload e leitura inicial
+## Fluxo principal
 
-1. O usuário logado acessa a página de envio (`/upload/`) e escolhe um arquivo de imagem.  
-2. A imagem é verificada e salva temporariamente.  
-3. A biblioteca C é chamada via Python (`leitor_lib.read_image_path()`), que retorna:  
-   - ID da prova  
-   - ID do participante  
-   - Alternativas marcadas  
-   - Status de erro  
-4. Os dados são armazenados no modelo `ImagemUpload` com a flag `confirmada=False`.  
-5. O usuário é redirecionado para uma tela de revisão com as respostas lidas automaticamente.  
+1. O usuário envia uma imagem em `/upload/`.
+2. A aplicação valida e salva temporariamente o arquivo.
+3. A biblioteca nativa processa a imagem.
+4. O sistema recupera os identificadores e as respostas reconhecidas.
+5. Os dados são apresentados para revisão.
+6. Após a confirmação, as respostas são comparadas com o gabarito oficial e a pontuação é salva.
 
-### 2. Revisão e correção
+## Estrutura
 
-1. O formulário com os dados lidos é exibido em colunas organizadas por questão.  
-2. O usuário pode ajustar qualquer resposta ou dado incorreto antes de confirmar.  
-3. Ao submeter o formulário:  
-   - As respostas são comparadas com um gabarito predefinido.  
-   - A pontuação é calculada.  
-   - Os dados finais são salvos no modelo `DadosImagem`.  
-   - A imagem é marcada como confirmada.  
+- `leitor_projeto/App/models.py`: modelos de perfil, upload e resultado.
+- `leitor_projeto/App/views.py`: fluxo de upload, revisão, galeria e perfil.
+- `leitor_projeto/App/biblioteca.py`: interface Python com a biblioteca C/C++ através de `ctypes`.
+- `leitor_projeto/App/templates/`: páginas renderizadas pelo Django.
+- `leitor_projeto/App/static/`: CSS, JavaScript e recursos da aplicação.
 
----
-
-## Estrutura do código
-
-### models.py
-
-- `Perfil`: armazena informações adicionais dos usuários (foto, etc.).  
-- `ImagemUpload`: imagem enviada, status da leitura, e associação ao usuário.  
-- `DadosImagem`: resultado final, nota obtida e dados corrigidos.  
-
-### views.py
-
-- `iniciar_leitura`: trata tanto o envio da imagem quanto a submissão da revisão.  
-- `galeria`: exibe a lista de gabaritos enviados.  
-- `perfil`: permite edição dos dados do usuário.  
-
-### biblioteca.py
-
-- Define a estrutura `Reading` com `ctypes.Structure`.  
-- Carrega a biblioteca `.so` e realiza chamadas com tipos seguros.  
-
----
-
-## Como rodar o projeto localmente
+## Executando localmente
 
 ### Requisitos
 
-- Git  
-- Docker e Docker Compose  
+- Git
+- Docker
+- Docker Compose
 
-### Passos
-
-```bash
-git clone https://github.com/JamesMakarov/Leitor_Gabarito
-cd Leitor_Gabarito
-
-# 2. Subir os containers com a aplicação e o banco
-docker-compose up --build
-
-# 3. Em outro terminal, aplicar as migrações
-docker-compose exec web python3 leitor_projeto/manage.py migrate
-
-# 4. Criar um superusuário (acesso ao admin)
-docker-compose exec web python3 leitor_projeto/manage.py createsuperuser
-```
-
-A aplicação estará disponível em:  
-**http://localhost:8000**
-
-Para desligar:  
+Clone o projeto:
 
 ```bash
-Ctrl + C
-docker-compose down
+git clone https://github.com/JamesMakarov/answer-sheet-reader.git
+cd answer-sheet-reader
 ```
 
----
+Opcionalmente, copie `.env.example` para `.env` e altere as credenciais de desenvolvimento.
+
+Suba os containers:
+
+```bash
+docker compose up --build
+```
+
+Em outro terminal, aplique as migrações:
+
+```bash
+docker compose exec web python3 leitor_projeto/manage.py migrate
+```
+
+Para criar um superusuário:
+
+```bash
+docker compose exec web python3 leitor_projeto/manage.py createsuperuser
+```
+
+A aplicação fica disponível em `http://localhost:8000`.
+
+Para encerrar:
+
+```bash
+docker compose down
+```
+
+## Observação
+
+As credenciais presentes em `.env.example` são apenas valores de desenvolvimento. O arquivo `.env` real não deve ser versionado.
