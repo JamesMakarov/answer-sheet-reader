@@ -59,6 +59,10 @@ A integração permite que o backend Django envie o caminho da imagem para a bib
 - `leitor_projeto/App/templates/`: páginas renderizadas pelo Django.
 - `leitor_projeto/App/static/`: CSS, JavaScript e recursos da aplicação.
 
+## Architecture
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the component model, request flow, native-library boundary, reliability decisions and a documented scaling path.
+
 ## Operação e confiabilidade
 
 - Gunicorn como servidor da aplicação no container;
