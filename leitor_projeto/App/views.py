@@ -19,9 +19,20 @@ from django.http import HttpResponse, Http404
 from .models import ImagemUpload, DadosImagem
 from .utils import GABARITOS, calcular_pontuacao
 from django.conf import settings
+from django.db import connection
 from django import template
 import base64
 from django.core.files.base import ContentFile
+
+def health_check(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+        return JsonResponse({"status": "ok"})
+    except Exception:
+        return JsonResponse({"status": "unavailable"}, status=503)
+
 
 def redirecionar_para_login(request):
     return redirect('login')
