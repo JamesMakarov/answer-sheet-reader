@@ -1,28 +1,26 @@
-from django.shortcuts import get_object_or_404, render
-from django.http import JsonResponse
-import ctypes
-from pathlib import Path
-import os, io
-from django.shortcuts import redirect
-from django.contrib.auth import authenticate, login, logout
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import get_user_model
-from .models import Perfil
-from .forms import PerfilForm, RevisaoGabaritoForm, DadosImagemForm
-from tempfile import NamedTemporaryFile
-from .models import ImagemUpload
-from django.core.files import File
-from PIL import Image
-from .biblioteca import leitor_lib
-from django.http import HttpResponse, Http404
-from .models import ImagemUpload, DadosImagem
-from .utils import GABARITOS, calcular_pontuacao
-from django.conf import settings
-from django.db import connection
-from django import template
 import base64
-from django.core.files.base import ContentFile
+import io
+import logging
+import os
+from tempfile import NamedTemporaryFile
+
+from PIL import Image
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.db import connection
+from django.http import Http404, HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+
+from .biblioteca import leitor_lib
+from .forms import PerfilForm, RevisaoGabaritoForm
+from .models import DadosImagem, ImagemUpload, Perfil
+from .utils import GABARITOS, calcular_pontuacao
+
+logger = logging.getLogger(__name__)
 
 def health_check(request):
     try:
@@ -88,10 +86,14 @@ def iniciar_leitura(request):
                     'imagem_id': imagem_obj.id
                 })
 
-            except Exception as e:
+            except Exception:
                 if 'tmp_path' in locals() and os.path.exists(tmp_path):
                     os.remove(tmp_path)
-                return JsonResponse({"erro": -99, "mensagem": f"Erro inesperado: {str(e)}"})
+                logger.exception("Falha ao processar imagem de gabarito")
+                return JsonResponse(
+                    {"erro": -99, "mensagem": "Falha ao processar a imagem."},
+                    status=500,
+                )
 
         else:
             imagem_id = request.POST.get('imagem_id')
@@ -158,20 +160,30 @@ def register_view(request):
     if request.user.is_authenticated:
         messages.success(request, "Você já está logado!")
         return redirect('home')
+
     if request.method == "POST":
-        email = request.POST['email']
-        password = request.POST['password']
-        if User.objects.filter(email=email).exists():
+        email = request.POST.get('email', '').strip().lower()
+        password = request.POST.get('password', '')
+
+        if User.objects.filter(email__iexact=email).exists():
             messages.error(request, "Este email já está em uso.")
         else:
-            user = User.objects.create_user(
-            username=email,
-            email=email,
-            password=password
-            )
-            Perfil.objects.create(user=user) 
-            login(request, user)
-            return redirect('home')
+            candidate = User(username=email, email=email)
+            try:
+                validate_password(password, user=candidate)
+            except ValidationError as errors:
+                for error in errors.messages:
+                    messages.error(request, error)
+            else:
+                user = User.objects.create_user(
+                    username=email,
+                    email=email,
+                    password=password,
+                )
+                Perfil.objects.create(user=user)
+                login(request, user)
+                return redirect('home')
+
     return render(request, 'accounts/register.html')
 
 @login_required
@@ -181,8 +193,7 @@ def logout_view(request):
 
 @login_required
 def home_view(request):
-    endereco = str(settings.BASE_DIR)
-    return render(request, 'accounts/home.html', {'endereco': endereco})
+    return render(request, 'accounts/home.html')
 
 @login_required
 def imagem_perfil(request, user_id):
