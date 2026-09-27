@@ -1,5 +1,7 @@
 # Answer Sheet Reader
 
+[![Django tests](https://github.com/JamesMakarov/answer-sheet-reader/actions/workflows/ci.yml/badge.svg)](https://github.com/JamesMakarov/answer-sheet-reader/actions/workflows/ci.yml)
+
 Aplicação web para envio, leitura, revisão e correção de gabaritos. O projeto combina **Django**, **PostgreSQL**, **Docker** e uma biblioteca nativa em **C/C++** para processamento das imagens.
 
 ## Funcionalidades
@@ -56,6 +58,25 @@ A integração permite que o backend Django envie o caminho da imagem para a bib
 - `leitor_projeto/App/biblioteca.py`: interface Python com a biblioteca C/C++ através de `ctypes`.
 - `leitor_projeto/App/templates/`: páginas renderizadas pelo Django.
 - `leitor_projeto/App/static/`: CSS, JavaScript e recursos da aplicação.
+
+## Operação e confiabilidade
+
+- Gunicorn como servidor da aplicação no container;
+- PostgreSQL com health check;
+- health endpoint da aplicação em `/health/`, incluindo verificação do banco;
+- inicialização do serviço web condicionada à disponibilidade do banco;
+- SQLite como fallback para desenvolvimento local e testes;
+- suíte de testes Django executada no GitHub Actions.
+
+## Testes
+
+Execute:
+
+```bash
+python leitor_projeto/manage.py test App
+```
+
+A suíte cobre a lógica de pontuação e os relacionamentos principais de persistência.
 
 ## Executando localmente
 
