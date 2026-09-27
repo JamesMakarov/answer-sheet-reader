@@ -13,7 +13,6 @@ urlpatterns = [
     path('perfil/', perfil_view, name='perfil'),
     path('galeria/', galeria_usuario, name='galeria'),
     path('imagem/<int:imagem_id>/', imagem_binaria, name='imagem_binaria'),
-    path('dados/', dados_leituras, name='dados'),
     path('dados/', dados_leituras, name='dados_leituras'),
     path('dados/<int:dado_id>/editar/', editar_dado, name='editar_dado'),
     path('dados/<int:dado_id>/deletar/', deletar_dado, name='deletar_dado'),
