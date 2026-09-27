@@ -100,6 +100,18 @@ Para encerrar:
 docker compose down
 ```
 
-## Observação
+## Configuração por ambiente
 
-As credenciais presentes em `.env.example` são apenas valores de desenvolvimento. O arquivo `.env` real não deve ser versionado.
+O projeto lê as seguintes variáveis:
+
+- `POSTGRES_NAME`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_HOST`
+- `DJANGO_SECRET_KEY`
+- `DJANGO_DEBUG`
+- `DJANGO_ALLOWED_HOSTS`
+
+Valores de desenvolvimento estão documentados em `.env.example`. O arquivo `.env` real não deve ser versionado.
+
+Em produção, use uma `DJANGO_SECRET_KEY` própria, desative `DJANGO_DEBUG` e configure explicitamente `DJANGO_ALLOWED_HOSTS`.
