@@ -1,8 +1,29 @@
-# Arquivos Python
+# Python
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
+*.log
 
-# Ambiente virtual
+# Virtual environments
+.venv/
 venv/
+env/
 
-\Leitor_Gabarito\leitor_projeto\venv
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Django generated/local data
+*.sqlite3
+leitor_projeto/media/
+leitor_projeto/staticfiles/
+
+# IDEs
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
